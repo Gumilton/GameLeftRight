@@ -2,6 +2,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.util.Random;
+import java.util.ArrayList;
 
 /**
  * Write a description of class GamePanel here.
@@ -14,61 +15,134 @@ public class GamePanel
     // instance variables - replace the example below with your own
     private JFrame frame;
     private JTextArea counter;
-    private JTextArea direction;
-    private JTextArea part;
-    private String[] partNames = {"手", "腿"};
-    private String[] directionNames = {"左", "右"};
+    private ArrayList<String> partNames = new ArrayList<String>();
+    private ArrayList<String> directionNames = new ArrayList<String>();
     private int counterNum = 3;
     Timer timer;
     boolean startClicked = false;
     JButton start;
     JButton next;
     JPanel guessBoard;
+    JTextField userDirect;
+    JTextField userPart;
+    JCheckBox check = new JCheckBox("方向相反");
+    Font insFont = new Font("宋体", Font.PLAIN, 80);
+    Font numberFont = new Font("Arial", Font.BOLD, 600); 
+    Font wordFont = new Font("宋体", Font.BOLD, 250);
     
     public static void main(String[] args) {
         GamePanel game = new GamePanel();
+        game.frame = new JFrame("Left or Right"); 
+        game.frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        
         game.setupGUI();
         //gameOn();        
     }
     
     
     private void setupGUI() {
-        frame = new JFrame("Left or Right"); 
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        JMenuBar menuBar = new JMenuBar();
+        JMenuItem restart = new JMenuItem("Restart");
+        restart.addActionListener(new ReStartListener());
+        menuBar.add(restart);
+        frame.setJMenuBar(menuBar);
         
         start = new JButton("START");
         start.addActionListener(new StartListener());
+        start.setFont(insFont);
         
+        guessBoard = new JPanel();
+        guessBoard.setLayout(new GridBagLayout());
+        guessBoard.setBackground(Color.WHITE);
+        
+        userDirect = new JTextField(20);
+        userDirect.setText("左；右");
+        userDirect.setFont(insFont);
+        userPart = new JTextField(20);
+        userPart.setText("手；脚");
+        userPart.setFont(insFont);
+        
+        JLabel userDirectIns = new JLabel("输入方向");
+        userDirectIns.setFont(insFont);
+        JLabel userPartIns = new JLabel("输入动作");
+        userPartIns.setFont(insFont);
+        
+        GridBagConstraints c = new GridBagConstraints();
+        
+        c.gridx = 0;
+        c.gridy = 0;
+        c.fill = GridBagConstraints.HORIZONTAL;
+        guessBoard.add(userDirectIns, c);
+        
+        c.gridx = 0;
+        c.gridy = 10;
+        c.fill = GridBagConstraints.HORIZONTAL;
+        guessBoard.add(userDirect, c);
+        
+        
+        c.gridx = 0;
+        c.gridy = 20;
+        c.fill = GridBagConstraints.HORIZONTAL;
+        guessBoard.add(userPartIns, c);
+        
+        
+        c.gridx = 0;
+        c.gridy = 30;
+        c.fill = GridBagConstraints.HORIZONTAL;
+        guessBoard.add(userPart, c);
+        
+        check.setSelected(true);
+        check.setFont(insFont);
+        c.gridx = 0;
+        c.gridy = 40;
+        c.fill = GridBagConstraints.HORIZONTAL;
+        guessBoard.add(check, c);
+        
+        frame.getContentPane().add(BorderLayout.CENTER, guessBoard);
         frame.getContentPane().add(BorderLayout.SOUTH, start);
-        frame.setSize(800,600);
+        frame.setSize(1300,800);
         frame.setVisible(true);
     }
     
     
     private void gameOn() {
         frame.getContentPane().removeAll();
+        frame.getContentPane().setBackground(Color.WHITE);
         Random random = new Random();
-        int d = random.nextInt(directionNames.length);
-        int p = random.nextInt(partNames.length);
+        int d = random.nextInt(directionNames.size());
+        int p = random.nextInt(partNames.size());
+        int op = random.nextInt(2);
         //System.out.println(d + " " + p);
         
-        Font wordFont = new Font("宋体", Font.BOLD, 200);
         
-        direction = new JTextArea(directionNames[d]);
+        JTextArea direction = new JTextArea(directionNames.get(d));
         direction.setFont(wordFont);
         direction.setEditable(false);
-        part = new JTextArea(partNames[p]);
+        JTextArea part = new JTextArea(partNames.get(p));
         part.setFont(wordFont);
         part.setEditable(false);
         
         guessBoard = new JPanel();
-        guessBoard.setLayout(new GridLayout(1,2));
-        guessBoard.add(direction);
-        guessBoard.add(part); 
+        guessBoard.setLayout(new GridBagLayout());
+        GridBagConstraints c = new GridBagConstraints();
+        c.fill = GridBagConstraints.BOTH;
+        
+        if(check.isSelected()){
+            String[] oppositeNames = {"真的", "反的"};
+            JTextArea opposite = new JTextArea(oppositeNames[op]);
+            opposite.setFont(wordFont);
+            opposite.setEditable(false);
+            guessBoard.add(opposite, c);
+        }
+        
+        guessBoard.add(direction,c);
+        guessBoard.add(part, c); 
         
         next = new JButton("NEXT");
-        next.addActionListener(new StartListener());
+        next.addActionListener(new NextListener());
+        next.setFont(insFont);
         
+        guessBoard.setBackground(Color.WHITE);
         frame.getContentPane().add(BorderLayout.CENTER, guessBoard);
         frame.getContentPane().add(BorderLayout.SOUTH, next);
         frame.revalidate();
@@ -77,20 +151,84 @@ public class GamePanel
         startClicked = false;
     }
     
+    public ArrayList<String> readIn(ArrayList<String> al, JTextField tf) {
+        String[] input;
+        
+        try { 
+            input = tf.getText().split("；");            
+        } catch (Exception ex) {
+            input = new String[1];
+            input[0] = "wrong";
+        }
+        
+        if(input == null || input.length == 0) {
+            input = new String[1];
+            input[0] = "wrong";
+        }
+        
+        for(String s:input) {
+            al.add(s);
+        }
+        
+        return al;
+    }
+    
+    
+    private class ReStartListener implements ActionListener {
+        public void actionPerformed(ActionEvent e) {            
+            timer.stop();
+            frame.getContentPane().removeAll();
+            setupGUI();        
+        }
+    }
+    
     
     private class StartListener implements ActionListener {
         public void actionPerformed(ActionEvent e) {
+            
+            partNames = readIn(partNames,userPart);
+            directionNames = readIn(directionNames,userDirect);
+            
             startClicked = true;
             frame.getContentPane().removeAll();
             counter = new JTextArea("" + counterNum);
-            Font numberFont = new Font("Arial", Font.BOLD, 400);  
             counter.setFont(numberFont);
             counter.setEditable(false);
             
             guessBoard = new JPanel();
             guessBoard.setLayout(new GridBagLayout());
-            guessBoard.add(counter);
+            GridBagConstraints c = new GridBagConstraints();
+            c.gridx = 0;
+            c.gridy = 0;
+            c.fill = GridBagConstraints.BOTH;
+            guessBoard.add(counter, c);
             
+            guessBoard.setBackground(Color.WHITE);
+            frame.getContentPane().add(BorderLayout.CENTER, guessBoard);
+            frame.validate();
+            timer = new Timer(1000, new TimerListener());
+            timer.start();
+        }
+    }
+    
+    
+    private class NextListener implements ActionListener {
+        public void actionPerformed(ActionEvent e) {
+            startClicked = true;
+            frame.getContentPane().removeAll();
+            counter = new JTextArea("" + counterNum); 
+            counter.setFont(numberFont);
+            counter.setEditable(false);
+            
+            guessBoard = new JPanel();
+            guessBoard.setLayout(new GridBagLayout());
+            GridBagConstraints c = new GridBagConstraints();
+            c.gridx = 0;
+            c.gridy = 0;
+            c.fill = GridBagConstraints.BOTH;
+            guessBoard.add(counter, c);
+            
+            guessBoard.setBackground(Color.WHITE);
             frame.getContentPane().add(BorderLayout.CENTER, guessBoard);
             frame.validate();
             timer = new Timer(1000, new TimerListener());
@@ -104,17 +242,23 @@ public class GamePanel
         public void actionPerformed(ActionEvent e) {
             if (startClicked) {
                 frame.getContentPane().removeAll();
+                frame.getContentPane().setBackground(Color.WHITE);
                 //System.out.println("action");
                 counterNum --;
-                Font numberFont = new Font("Arial", Font.BOLD, 400);
                 counter = new JTextArea("" + counterNum);
                 counter.setFont(numberFont);
                 counter.setEditable(false);
                 
                 guessBoard = new JPanel();
                 guessBoard.setLayout(new GridBagLayout());
-                guessBoard.add(counter);
+                GridBagConstraints c = new GridBagConstraints();
+                c.gridwidth = 3;
+                c.gridx = 0;
+                c.gridy = 0;
+                c.fill = GridBagConstraints.BOTH;
+                guessBoard.add(counter, c);
                 
+                guessBoard.setBackground(Color.WHITE);
                 frame.getContentPane().add(BorderLayout.CENTER, guessBoard);
                 frame.validate();
                 
