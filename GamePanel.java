@@ -13,11 +13,11 @@ public class GamePanel
 {
     // instance variables - replace the example below with your own
     private JFrame frame;
-    private ImagePanel counter;
-    private ImagePanel direction;
-    private ImagePanel part;
-    private String[] partNames = {"hand.jpg", "leg.jpg"};
-    private String[] directionNames = {"left.jpg", "right.jpg"};
+    private JTextArea counter;
+    private JTextArea direction;
+    private JTextArea part;
+    private String[] partNames = {"手", "腿"};
+    private String[] directionNames = {"左", "右"};
     private int counterNum = 3;
     Timer timer;
     boolean startClicked = false;
@@ -39,7 +39,7 @@ public class GamePanel
         start = new JButton("START");
         start.addActionListener(new StartListener());
         
-        frame.getContentPane().add(BorderLayout.CENTER, start);
+        frame.getContentPane().add(BorderLayout.SOUTH, start);
         frame.setSize(800,600);
         frame.setVisible(true);
     }
@@ -52,13 +52,19 @@ public class GamePanel
         int p = random.nextInt(partNames.length);
         //System.out.println(d + " " + p);
         
-        direction = new ImagePanel(directionNames[d], 400, 600);
-        part = new ImagePanel(partNames[p],400, 600);
+        Font wordFont = new Font("宋体", Font.BOLD, 200);
+        
+        direction = new JTextArea(directionNames[d]);
+        direction.setFont(wordFont);
+        direction.setEditable(false);
+        part = new JTextArea(partNames[p]);
+        part.setFont(wordFont);
+        part.setEditable(false);
         
         guessBoard = new JPanel();
         guessBoard.setLayout(new GridLayout(1,2));
         guessBoard.add(direction);
-        guessBoard.add(part);        
+        guessBoard.add(part); 
         
         next = new JButton("NEXT");
         next.addActionListener(new StartListener());
@@ -76,8 +82,16 @@ public class GamePanel
         public void actionPerformed(ActionEvent e) {
             startClicked = true;
             frame.getContentPane().removeAll();
-            counter = new ImagePanel(counterNum + ".jpg", 800, 600);
-            frame.getContentPane().add(BorderLayout.CENTER, counter);
+            counter = new JTextArea("" + counterNum);
+            Font numberFont = new Font("Arial", Font.BOLD, 400);  
+            counter.setFont(numberFont);
+            counter.setEditable(false);
+            
+            guessBoard = new JPanel();
+            guessBoard.setLayout(new GridBagLayout());
+            guessBoard.add(counter);
+            
+            frame.getContentPane().add(BorderLayout.CENTER, guessBoard);
             frame.validate();
             timer = new Timer(1000, new TimerListener());
             timer.start();
@@ -92,8 +106,16 @@ public class GamePanel
                 frame.getContentPane().removeAll();
                 //System.out.println("action");
                 counterNum --;
-                counter = new ImagePanel(counterNum + ".jpg", 800, 600);
-                frame.getContentPane().add(BorderLayout.CENTER, counter);
+                Font numberFont = new Font("Arial", Font.BOLD, 400);
+                counter = new JTextArea("" + counterNum);
+                counter.setFont(numberFont);
+                counter.setEditable(false);
+                
+                guessBoard = new JPanel();
+                guessBoard.setLayout(new GridBagLayout());
+                guessBoard.add(counter);
+                
+                frame.getContentPane().add(BorderLayout.CENTER, guessBoard);
                 frame.validate();
                 
                 if (counterNum < 1) { 
