@@ -26,9 +26,11 @@ public class GamePanel
     JTextField userDirect;
     JTextField userPart;
     JCheckBox check = new JCheckBox("方向相反");
-    Font insFont = new Font("宋体", Font.PLAIN, 80);
+    JCheckBox auto = new JCheckBox("自动");
+    Font insFont = new Font("小篆", Font.PLAIN, 80);
     Font numberFont = new Font("Arial", Font.BOLD, 600); 
-    Font wordFont = new Font("宋体", Font.BOLD, 250);
+    Font wordFont = new Font("小篆", Font.BOLD, 250);
+    Timer autoTimer;
     
     public static void main(String[] args) {
         GamePanel game = new GamePanel();
@@ -98,6 +100,13 @@ public class GamePanel
         c.fill = GridBagConstraints.HORIZONTAL;
         guessBoard.add(check, c);
         
+        auto.setSelected(true);
+        auto.setFont(insFont);
+        c.gridx = 0;
+        c.gridy = 60;
+        c.fill = GridBagConstraints.HORIZONTAL;
+        guessBoard.add(auto, c);
+        
         frame.getContentPane().add(BorderLayout.CENTER, guessBoard);
         frame.getContentPane().add(BorderLayout.SOUTH, start);
         frame.setSize(1300,800);
@@ -149,6 +158,12 @@ public class GamePanel
         frame.repaint();
         counterNum = 3;
         startClicked = false;
+        
+        if(auto.isSelected()) {
+            autoTimer = new Timer(3000, new AutoNextListener());
+            autoTimer.start();
+        }
+        
     }
     
     public ArrayList<String> readIn(ArrayList<String> al, JTextField tf) {
@@ -173,23 +188,8 @@ public class GamePanel
         return al;
     }
     
-    
-    private class ReStartListener implements ActionListener {
-        public void actionPerformed(ActionEvent e) {            
-            timer.stop();
-            frame.getContentPane().removeAll();
-            setupGUI();        
-        }
-    }
-    
-    
-    private class StartListener implements ActionListener {
-        public void actionPerformed(ActionEvent e) {
-            
-            partNames = readIn(partNames,userPart);
-            directionNames = readIn(directionNames,userDirect);
-            
-            startClicked = true;
+    public void next () {
+        startClicked = true;
             frame.getContentPane().removeAll();
             counter = new JTextArea("" + counterNum);
             counter.setFont(numberFont);
@@ -206,33 +206,45 @@ public class GamePanel
             guessBoard.setBackground(Color.WHITE);
             frame.getContentPane().add(BorderLayout.CENTER, guessBoard);
             frame.validate();
-            timer = new Timer(1000, new TimerListener());
+            timer = new Timer(500, new TimerListener());
             timer.start();
+        
+    }
+    
+    
+    private class ReStartListener implements ActionListener {
+        public void actionPerformed(ActionEvent e) {            
+            timer.stop();
+            autoTimer.stop();
+            frame.getContentPane().removeAll();
+            setupGUI();        
         }
     }
     
     
-    private class NextListener implements ActionListener {
+    private class StartListener implements ActionListener {
         public void actionPerformed(ActionEvent e) {
-            startClicked = true;
-            frame.getContentPane().removeAll();
-            counter = new JTextArea("" + counterNum); 
-            counter.setFont(numberFont);
-            counter.setEditable(false);
             
-            guessBoard = new JPanel();
-            guessBoard.setLayout(new GridBagLayout());
-            GridBagConstraints c = new GridBagConstraints();
-            c.gridx = 0;
-            c.gridy = 0;
-            c.fill = GridBagConstraints.BOTH;
-            guessBoard.add(counter, c);
+            partNames = readIn(partNames,userPart);
+            directionNames = readIn(directionNames,userDirect);
             
-            guessBoard.setBackground(Color.WHITE);
-            frame.getContentPane().add(BorderLayout.CENTER, guessBoard);
-            frame.validate();
-            timer = new Timer(1000, new TimerListener());
-            timer.start();
+            next();
+        }
+    }
+    
+    
+    private class NextListener extends StartListener {
+        public void actionPerformed(ActionEvent e) {
+            next();
+            
+        }
+    }
+    
+    
+    private class AutoNextListener extends StartListener {
+        public void actionPerformed(ActionEvent e) {
+            next();
+            autoTimer.stop();
         }
     }
     

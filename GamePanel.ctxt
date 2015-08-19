@@ -7,4 +7,6 @@ comment2.params=
 comment2.target=void\ gameOn()
 comment3.params=al\ tf
 comment3.target=java.util.ArrayList\ readIn(java.util.ArrayList,\ javax.swing.JTextField)
-numComments=4
+comment4.params=
+comment4.target=void\ next()
+numComments=5
